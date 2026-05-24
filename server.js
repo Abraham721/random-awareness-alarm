@@ -105,6 +105,7 @@ async function tick() {
 const app = express();
 app.use(express.json({ limit: '256kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/img', express.static(path.join(__dirname, 'image'))); // mascot illustrations
 
 function sanitizeConfig(c) {
   c = c || {};

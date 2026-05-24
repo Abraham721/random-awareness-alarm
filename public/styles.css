@@ -33,6 +33,12 @@ header.app-header .tz { color: var(--text-dim); font-size: 12px; margin-top: 4px
 .card .hint { color: var(--text-dim); font-size: 13px; margin: 6px 0 0; }
 .center { text-align: center; }
 .muted { color: var(--text-dim); }
+
+/* Mascot illustrations */
+.illust-onboarding { display: block; width: 100%; max-height: 300px; object-fit: contain; border-radius: 14px; margin: 0 auto 16px; }
+.illust-hero { display: block; width: 128px; height: 128px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+.illust-alarm { display: block; width: 120px; height: 120px; object-fit: contain; margin: 2px auto 8px; }
+
 .hero { text-align: center; padding: 26px 18px; }
 .hero .next-label { color: var(--text-dim); font-size: 13px; }
 .hero .next-time { font-size: 40px; font-weight: 680; letter-spacing: -0.02em; margin: 4px 0 2px; }

@@ -1,8 +1,8 @@
 /* sw.js — service worker: persistent push display, ack reporting, offline shell, stats logging */
 'use strict';
 
-const CACHE = 'aw-shell-v2';
-const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icons/icon-192.png'];
+const CACHE = 'aw-shell-v3';
+const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json', '/img/icon-192.png'];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -57,7 +57,6 @@ async function addReceived(ts) {
   db.close();
 }
 
-// Tell the server this alarm was seen/acknowledged so it stops re-nudging.
 async function postAck(d) {
   if (!d || !d.userId || !d.date || !d.time) return;
   try {
@@ -80,11 +79,11 @@ self.addEventListener('push', (event) => {
     (data.time ? '&time=' + encodeURIComponent(data.time) : '');
   const options = {
     body: data.body || '지금 이 순간 당신은 무엇을 하고 있나요?',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
+    icon: '/img/icon-192.png',
+    badge: '/img/icon-192.png',
     tag: data.tag || ('aw-' + ts),
     renotify: true,
-    requireInteraction: true,           // stays until the user acts -> a missed chime is not a missed alarm
+    requireInteraction: true,
     vibrate: [180, 80, 180, 80, 180],
     actions: [{ action: 'log', title: '기록하기' }],
     data: { ts, date: data.date || null, time: data.time || null, userId: data.userId || null, url },
@@ -108,7 +107,6 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
-// Swiping the notification away also counts as "seen" -> stop nudging.
 self.addEventListener('notificationclose', (event) => {
   event.waitUntil(postAck(event.notification.data || {}));
 });
