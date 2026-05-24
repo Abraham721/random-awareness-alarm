@@ -1,7 +1,7 @@
 /* sw.js — service worker: persistent push display, ack reporting, offline shell, stats logging */
 'use strict';
 
-const CACHE = 'aw-shell-v3';
+const CACHE = 'aw-shell-v4';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json', '/img/icon-192.png'];
 
 self.addEventListener('install', (event) => {
