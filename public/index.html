@@ -37,7 +37,7 @@
       </div>
 
       <div class="card hero" id="heroCard" style="display:none;">
-        <img class="illust-hero" src="/img/hero.webp" alt="구름 친구" />
+        <img class="illust-hero" src="/img/hero-cut.webp" alt="구름 친구" />
         <div class="hero-line" id="heroLine">예고 없이, 지금 이 순간</div>
         <div class="next-sub" id="heroSub"></div>
       </div>
@@ -121,7 +121,11 @@
     <!-- LOG -->
     <section class="view" id="view-log">
       <div class="card" id="logPromptCard">
-        <img class="illust-alarm" src="/img/alarm.webp" alt="종을 울리는 구름 친구" />
+        <div class="alarm-illust">
+          <span class="bell-fx"><span></span><span></span><span></span></span>
+          <img class="alarm-base" src="/img/alarm-cut.webp" alt="종을 울리는 구름 친구" />
+          <img class="alarm-bulb" src="/img/bulb.webp" alt="" />
+        </div>
         <h2 id="logPromptTitle">지금, 무엇을 하고 있나요?</h2>
         <p class="hint" id="logPromptSub" style="margin-top:0;">떠오르는 그대로 한 줄 적어보세요. 판단하지 말고, 그저 알아차립니다.</p>
         <textarea id="logInput" placeholder="예) 설거지를 하면서 저녁 메뉴를 생각하고 있었다"></textarea>
