@@ -8,7 +8,6 @@
   <meta name="description" content="명상 자각 연습을 위한 랜덤 알람" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
-  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="알아차리기" />
@@ -21,7 +20,7 @@
       <div class="tz" id="tzLabel"></div>
     </header>
 
-    <!-- ===== HOME ===== -->
+    <!-- HOME -->
     <section class="view active" id="view-home">
       <div class="card banner" id="enableCard">
         <h2>알림을 켜주세요</h2>
@@ -53,7 +52,7 @@
       </div>
     </section>
 
-    <!-- ===== SETTINGS ===== -->
+    <!-- SETTINGS -->
     <section class="view" id="view-settings">
       <div class="card">
         <h2>알람 빈도</h2>
@@ -79,6 +78,28 @@
       </div>
 
       <div class="card">
+        <h2>놓쳤을 때 재알림</h2>
+        <p class="hint" style="margin-top:0;">알림을 일정 시간 안에 열어보지 않으면 부드럽게 다시 알려줍니다. 바쁠 때 놓치지 않도록요.</p>
+        <div class="row">
+          <div class="label">재알림 횟수<small>0이면 끔</small></div>
+          <div class="stepper">
+            <button id="nudgeMinus" aria-label="줄이기">−</button>
+            <span class="val" id="nudgeVal">1</span>
+            <button id="nudgePlus" aria-label="늘리기">+</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">재알림 간격</div>
+          <select id="nudgeIntervalSel">
+            <option value="5">5분</option>
+            <option value="10" selected>10분</option>
+            <option value="15">15분</option>
+            <option value="30">30분</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>제외 시간대</h2>
         <p class="hint" style="margin-top:0;">알림이 울리면 안 되는 시간(수면, 업무, 운전 등)을 추가하세요. 요일별로 다르게 설정할 수 있어요.</p>
         <div id="exclList" style="margin-top:12px;"></div>
@@ -89,7 +110,7 @@
       <p class="hint center" id="saveHint" style="margin-top:10px;"></p>
     </section>
 
-    <!-- ===== LOG ===== -->
+    <!-- LOG -->
     <section class="view" id="view-log">
       <div class="card" id="logPromptCard">
         <h2 id="logPromptTitle">지금, 무엇을 하고 있나요?</h2>
@@ -103,7 +124,7 @@
       </div>
     </section>
 
-    <!-- ===== STATS ===== -->
+    <!-- STATS -->
     <section class="view" id="view-stats">
       <div class="card">
         <h2>전체 요약</h2>
@@ -132,7 +153,6 @@
   </nav>
 
   <div class="toast" id="toast"></div>
-
   <script src="app.js"></script>
 </body>
 </html>

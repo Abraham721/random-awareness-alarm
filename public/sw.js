@@ -1,7 +1,7 @@
-/* sw.js — service worker: push display, click handling, offline shell, stats logging */
+/* sw.js — service worker: persistent push display, ack reporting, offline shell, stats logging */
 'use strict';
 
-const CACHE = 'aw-shell-v1';
+const CACHE = 'aw-shell-v2';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,11 +17,10 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-// Network-first for same-origin GET, fall back to cache (so the app opens offline).
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  if (req.url.includes('/api/')) return; // never cache API
+  if (req.url.includes('/api/')) return;
   event.respondWith((async () => {
     try {
       const fresh = await fetch(req);
@@ -35,7 +34,7 @@ self.addEventListener('fetch', (event) => {
   })());
 });
 
-// ---- tiny IndexedDB for "received" events (used by the stats view) ----
+// ---- IndexedDB (received events for stats) ----
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('awareness', 1);
@@ -58,6 +57,17 @@ async function addReceived(ts) {
   db.close();
 }
 
+// Tell the server this alarm was seen/acknowledged so it stops re-nudging.
+async function postAck(d) {
+  if (!d || !d.userId || !d.date || !d.time) return;
+  try {
+    await fetch('/api/ack', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: d.userId, date: d.date, time: d.time }),
+    });
+  } catch (_) {}
+}
+
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; }
@@ -65,14 +75,19 @@ self.addEventListener('push', (event) => {
 
   const ts = data.ts || Date.now();
   const title = data.title || '지금, 알아차리기';
+  const url = './?log=1&ts=' + ts +
+    (data.date ? '&date=' + encodeURIComponent(data.date) : '') +
+    (data.time ? '&time=' + encodeURIComponent(data.time) : '');
   const options = {
     body: data.body || '지금 이 순간 당신은 무엇을 하고 있나요?',
     icon: './icons/icon-192.png',
     badge: './icons/icon-192.png',
     tag: data.tag || ('aw-' + ts),
     renotify: true,
-    vibrate: [120, 60, 120],
-    data: { ts, url: './?log=1&ts=' + ts },
+    requireInteraction: true,           // stays until the user acts -> a missed chime is not a missed alarm
+    vibrate: [180, 80, 180, 80, 180],
+    actions: [{ action: 'log', title: '기록하기' }],
+    data: { ts, date: data.date || null, time: data.time || null, userId: data.userId || null, url },
   };
   event.waitUntil((async () => {
     try { await addReceived(ts); } catch (_) {}
@@ -83,12 +98,17 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const d = event.notification.data || {};
-  const url = d.url || './?log=1';
   event.waitUntil((async () => {
+    await postAck(d);
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const c of all) {
-      if ('focus' in c) { c.postMessage({ type: 'open-log', ts: d.ts }); return c.focus(); }
+      if ('focus' in c) { c.postMessage({ type: 'open-log', ts: d.ts, date: d.date, time: d.time }); return c.focus(); }
     }
-    if (self.clients.openWindow) return self.clients.openWindow(url);
+    if (self.clients.openWindow) return self.clients.openWindow(d.url || './?log=1');
   })());
+});
+
+// Swiping the notification away also counts as "seen" -> stop nudging.
+self.addEventListener('notificationclose', (event) => {
+  event.waitUntil(postAck(event.notification.data || {}));
 });
