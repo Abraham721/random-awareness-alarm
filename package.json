@@ -1,0 +1,17 @@
+{
+  "name": "random-awareness-alarm",
+  "version": "0.1.0",
+  "description": "Random awareness alarm for meditation practice (PWA + Web Push)",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node scheduler.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "web-push": "^3.6.7",
+    "luxon": "^3.4.4",
+    "node-cron": "^3.0.3"
+  }
+}

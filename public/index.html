@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>지금, 알아차리기</title>
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="description" content="명상 자각 연습을 위한 랜덤 알람" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="알아차리기" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>지금, 알아차리기</h1>
+      <div class="tz" id="tzLabel"></div>
+    </header>
+
+    <!-- ===== HOME ===== -->
+    <section class="view active" id="view-home">
+      <div class="card banner" id="enableCard">
+        <h2>알림을 켜주세요</h2>
+        <p class="hint">하루 동안 무작위로 울리는 알림으로, 지금 이 순간을 알아차리는 연습을 합니다. 시작하려면 알림을 허용하세요.</p>
+        <button class="btn-primary" id="enableBtn" style="margin-top:12px;">알림 켜고 시작하기</button>
+      </div>
+
+      <div class="card banner" id="iosHint" style="display:none;">
+        <h2>아이폰 사용자 안내</h2>
+        <p class="hint">아이폰에서는 <b>공유 → "홈 화면에 추가"</b>로 앱을 설치한 뒤, 홈 화면 아이콘으로 열어야 알림이 작동합니다. (iOS 16.4 이상)</p>
+      </div>
+
+      <div class="card hero" id="heroCard" style="display:none;">
+        <div class="next-label">다음 알림</div>
+        <div class="next-time" id="nextTime">—</div>
+        <div class="next-sub" id="nextSub"></div>
+      </div>
+
+      <div class="card" id="todayCard" style="display:none;">
+        <h2>오늘 예정된 시각</h2>
+        <div class="status-line" style="margin-bottom:10px;">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText" class="muted">상태 확인 중…</span>
+        </div>
+        <div class="chips" id="todayChips"></div>
+        <p class="hint" id="todayMeta"></p>
+        <button class="btn btn-block btn-ghost" id="testBtn" style="margin-top:14px;">🔔 테스트 알림 보내기</button>
+        <p class="hint center" id="testHint" style="margin-top:8px;">설치 후 폰을 잠그고 눌러서, 백그라운드 알림이 오는지 확인해 보세요.</p>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section class="view" id="view-settings">
+      <div class="card">
+        <h2>알람 빈도</h2>
+        <div class="row">
+          <div class="label">하루 알림 횟수<small>활동 시간 안에서 무작위로 분배됩니다</small></div>
+          <div class="stepper">
+            <button id="cntMinus" aria-label="줄이기">−</button>
+            <span class="val" id="cntVal">5</span>
+            <button id="cntPlus" aria-label="늘리기">+</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">최소 간격<small>알림이 몰리지 않도록 최소 간격을 둡니다</small></div>
+          <select id="gapSel">
+            <option value="15">15분</option>
+            <option value="30" selected>30분</option>
+            <option value="45">45분</option>
+            <option value="60">60분</option>
+            <option value="90">90분</option>
+            <option value="120">120분</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>제외 시간대</h2>
+        <p class="hint" style="margin-top:0;">알림이 울리면 안 되는 시간(수면, 업무, 운전 등)을 추가하세요. 요일별로 다르게 설정할 수 있어요.</p>
+        <div id="exclList" style="margin-top:12px;"></div>
+        <button class="btn btn-block btn-ghost" id="addExclBtn" style="margin-top:6px;">＋ 제외 시간대 추가</button>
+      </div>
+
+      <button class="btn-primary" id="saveBtn">저장하기</button>
+      <p class="hint center" id="saveHint" style="margin-top:10px;"></p>
+    </section>
+
+    <!-- ===== LOG ===== -->
+    <section class="view" id="view-log">
+      <div class="card" id="logPromptCard">
+        <h2 id="logPromptTitle">지금, 무엇을 하고 있나요?</h2>
+        <p class="hint" id="logPromptSub" style="margin-top:0;">떠오르는 그대로 한 줄 적어보세요. 판단하지 말고, 그저 알아차립니다.</p>
+        <textarea id="logInput" placeholder="예) 설거지를 하면서 저녁 메뉴를 생각하고 있었다"></textarea>
+        <button class="btn-primary" id="logSaveBtn" style="margin-top:12px;">기록하기</button>
+      </div>
+      <div class="card">
+        <h2>최근 기록</h2>
+        <div id="logList"><p class="hint">아직 기록이 없어요.</p></div>
+      </div>
+    </section>
+
+    <!-- ===== STATS ===== -->
+    <section class="view" id="view-stats">
+      <div class="card">
+        <h2>전체 요약</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="num" id="statRecv">0</div><div class="lbl">받은 알림</div></div>
+          <div class="stat"><div class="num" id="statResp">0</div><div class="lbl">기록한 횟수</div></div>
+          <div class="stat"><div class="num" id="statRate">0%</div><div class="lbl">응답률</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>최근 7일</h2>
+        <div class="bars" id="weekBars"></div>
+        <p class="hint center" style="margin-top:10px;">
+          <span style="color:var(--accent)">■</span> 받은 알림 &nbsp;
+          <span style="color:var(--good)">■</span> 기록함
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <button data-tab="home" class="active"><span class="ic">◎</span>홈</button>
+    <button data-tab="settings"><span class="ic">⚙</span>설정</button>
+    <button data-tab="log"><span class="ic">✎</span>기록</button>
+    <button data-tab="stats"><span class="ic">▦</span>통계</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
