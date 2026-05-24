@@ -28,7 +28,7 @@ body::after  { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
   background: linear-gradient(180deg, rgba(13,12,36,.30) 0%, rgba(13,12,36,.04) 38%, rgba(13,12,36,.55) 100%); }
 
 .app { max-width: 480px; margin: 0 auto; padding: 18px 16px calc(98px + var(--safe-bottom)); position: relative; z-index: 1; }
-header.app-header { text-align: center; padding: 16px 0 20px; }
+header.app-header { display: none; }
 header.app-header h1 { font-size: 21px; margin: 0; letter-spacing: -0.02em; font-weight: 700; }
 header.app-header .tz { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
 .view { display: none; animation: fade .25s ease; }
@@ -47,9 +47,11 @@ header.app-header .tz { color: var(--text-dim); font-size: 12px; margin-top: 4px
 .muted { color: var(--text-dim); }
 
 /* Mascot illustrations */
-.illust-onboarding { display: block; width: 100%; max-width: 330px; max-height: 380px; object-fit: contain; margin: 0 auto 4px; filter: drop-shadow(0 14px 34px rgba(0,0,0,.40)); }
+.illust-onboarding { display: block; width: auto; max-width: 100%; max-height: 54vh; object-fit: contain; margin: 6px auto 12px; filter: drop-shadow(0 16px 38px rgba(0,0,0,.42)); }
 /* onboarding character floats directly on the night-sky background (no glass panel) */
-#enableCard { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding-top: 4px; }
+#enableCard { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 8px 10px 18px; text-align: center; }
+#enableCard h2 { font-size: 19px; }
+#enableCard .hint { max-width: 320px; margin-left: auto; margin-right: auto; }
 .illust-hero { display: block; width: 132px; height: 132px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; box-shadow: 0 8px 28px rgba(0,0,0,.35); }
 .illust-alarm { display: block; width: 124px; height: 124px; object-fit: contain; margin: 2px auto 8px; }
 
