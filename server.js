@@ -114,12 +114,13 @@ function sanitizeConfig(c) {
   const exclusions = Array.isArray(c.exclusions)
     ? c.exclusions.slice(0, 50).map((e, i) => ({
         id: e.id || ('ex' + i + '-' + Date.now()), name: String(e.name || '제외').slice(0, 40),
-        start: e.start, end: e.end, days: Array.isArray(e.days) ? e.days.filter((d) => d >= 0 && d <= 6) : [],
+        start: e.start, end: e.end, days: Array.isArray(e.days) ? e.days.filter((d) => d >= 0 && d <= 6) : [], enabled: e.enabled !== false,
       })).filter((e) => { try { scheduler.parseHHMM(e.start); scheduler.parseHHMM(e.end); return true; } catch (_) { return false; } })
     : [];
   const renudgeIntervalMinutes = Math.max(1, Math.min(180, Math.floor(c.renudgeIntervalMinutes != null ? c.renudgeIntervalMinutes : 10)));
   const renudgeMaxCount = Math.max(0, Math.min(5, Math.floor(c.renudgeMaxCount != null ? c.renudgeMaxCount : 1)));
-  return { alarmsPerDay, minGapMinutes, renudgeIntervalMinutes, renudgeMaxCount, exclusions };
+  const fullyRandom = !!c.fullyRandom;
+  return { alarmsPerDay, minGapMinutes, renudgeIntervalMinutes, renudgeMaxCount, fullyRandom, exclusions };
 }
 
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));

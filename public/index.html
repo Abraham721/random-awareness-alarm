@@ -38,18 +38,17 @@
 
       <div class="card hero" id="heroCard" style="display:none;">
         <img class="illust-hero" src="/img/hero.webp" alt="구름 친구" />
-        <div class="next-label">다음 알림</div>
-        <div class="next-time" id="nextTime">—</div>
-        <div class="next-sub" id="nextSub"></div>
+        <div class="hero-line" id="heroLine">예고 없이, 지금 이 순간</div>
+        <div class="next-sub" id="heroSub"></div>
       </div>
 
       <div class="card" id="todayCard" style="display:none;">
-        <h2>오늘 예정된 시각</h2>
-        <div class="status-line" style="margin-bottom:10px;">
+        <h2>오늘의 알아차림</h2>
+        <div class="status-line" style="margin-bottom:12px;">
           <span class="dot" id="statusDot"></span>
           <span id="statusText" class="muted">상태 확인 중…</span>
         </div>
-        <div class="chips" id="todayChips"></div>
+        <div class="clouds" id="todayClouds"></div>
         <p class="hint" id="todayMeta"></p>
         <button class="btn btn-block btn-ghost" id="testBtn" style="margin-top:14px;">🔔 테스트 알림 보내기</button>
         <p class="hint center" id="testHint" style="margin-top:8px;">설치 후 폰을 잠그고 눌러서, 백그라운드 알림이 오는지 확인해 보세요.</p>
@@ -61,6 +60,10 @@
       <div class="card">
         <h2>알람 빈도</h2>
         <div class="row">
+          <div class="label">완전 랜덤<small>횟수까지 무작위 · 진행 표시 숨김</small></div>
+          <button class="switch" id="fullyRandomToggle" role="switch" aria-label="완전 랜덤"><span class="knob"></span></button>
+        </div>
+        <div class="row" id="countRow">
           <div class="label">하루 알림 횟수<small>활동 시간 안에서 무작위로 분배됩니다</small></div>
           <div class="stepper">
             <button id="cntMinus" aria-label="줄이기">−</button>
@@ -68,6 +71,7 @@
             <button id="cntPlus" aria-label="늘리기">+</button>
           </div>
         </div>
+        <p class="hint" id="fullyRandomNote" style="display:none;">완전 랜덤이 켜져 있어요 — 횟수는 매일 자동(3~8회)으로 정해지고, 홈에서 횟수·시각은 보이지 않습니다.</p>
         <div class="row">
           <div class="label">최소 간격<small>알림이 몰리지 않도록 최소 간격을 둡니다</small></div>
           <select id="gapSel">
