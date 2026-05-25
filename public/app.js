@@ -288,6 +288,42 @@ $('#nudgeMinus').addEventListener('click', () => { config.renudgeMaxCount = Math
 $('#nudgePlus').addEventListener('click', () => { config.renudgeMaxCount = Math.min(5, config.renudgeMaxCount + 1); $('#nudgeVal').textContent = config.renudgeMaxCount; });
 $('#nudgeIntervalSel').addEventListener('change', (e) => { config.renudgeIntervalMinutes = +e.target.value; });
 $('#fullyRandomToggle').addEventListener('click', () => { config.fullyRandom = !config.fullyRandom; applyFullyRandomUI(); });
+async function clearLocalData() {
+  const db = await openDB();
+  await new Promise((res, rej) => {
+    const tx = db.transaction(['logs', 'received'], 'readwrite');
+    tx.objectStore('logs').clear();
+    tx.objectStore('received').clear();
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+  db.close();
+}
+function updateResetLabel() {
+  const full = $('#fullResetToggle').classList.contains('on');
+  $('#resetBtn').textContent = full ? '전체 초기화 (기록·통계 포함)' : '설정 초기화';
+  $('#resetBtn').style.color = full ? '#ff9d9d' : 'var(--text-dim)';
+}
+$('#fullResetToggle').addEventListener('click', () => { $('#fullResetToggle').classList.toggle('on'); updateResetLabel(); });
+$('#resetBtn').addEventListener('click', async () => {
+  const full = $('#fullResetToggle').classList.contains('on');
+  const msg = full
+    ? '전체 초기화 — 설정과 함께 기록·통계가 모두 삭제됩니다.\n되돌릴 수 없어요. 계속할까요?'
+    : '설정을 기본값으로 되돌릴까요?\n(알람 횟수·간격·재알림·완전 랜덤·제외 시간대가 초기화됩니다)';
+  if (!confirm(msg)) return;
+  config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  persistConfig();
+  renderSettings();
+  if (full) { try { await clearLocalData(); } catch (_) {} }
+  try {
+    if (await isSubscribed()) {
+      const r = await api('/api/config', 'POST', { userId, timezone: tz, config });
+      lastSchedule = r.schedule;
+    }
+    toast(full ? '전체 초기화했어요' : '설정을 기본값으로 되돌렸어요');
+  } catch (e) { console.error(e); toast('초기화 중 오류: ' + e.message); }
+  $('#fullResetToggle').classList.remove('on');
+  updateResetLabel();
+});
 
 $('#saveBtn').addEventListener('click', async () => {
   for (const ex of config.exclusions) {
