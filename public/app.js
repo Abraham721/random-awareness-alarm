@@ -111,11 +111,12 @@ async function enableFlow() {
 // ---- IndexedDB (logs + received events) ----
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('awareness', 1);
+    const req = indexedDB.open('awareness', 2);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('received')) db.createObjectStore('received', { keyPath: 'ts' });
       if (!db.objectStoreNames.contains('logs')) db.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
+      if (!db.objectStoreNames.contains('alarms')) db.createObjectStore('alarms', { keyPath: 'key' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -126,6 +127,17 @@ const reqP = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result
 async function addLog(entry) { const db = await openDB(); await reqP(txStore(db, 'logs', 'readwrite').add(entry)); db.close(); }
 async function getLogs() { const db = await openDB(); const all = await reqP(txStore(db, 'logs', 'readonly').getAll()); db.close(); return (all || []).sort((a, b) => b.ts - a.ts); }
 async function getReceived() { const db = await openDB(); const all = await reqP(txStore(db, 'received', 'readonly').getAll()); db.close(); return all || []; }
+async function getAlarms() { const db = await openDB(); const all = await reqP(txStore(db, 'alarms', 'readonly').getAll()); db.close(); return all || []; }
+async function markAlarmAcked(date, time) {
+  if (!date || !time) return;
+  const key = date + '_' + time;
+  const db = await openDB();
+  const st = txStore(db, 'alarms', 'readwrite');
+  const rec = await reqP(st.get(key));
+  if (rec) { rec.acked = true; await reqP(st.put(rec)); }
+  else { await reqP(st.put({ key, date, time, ts: Date.now(), acked: true })); }
+  db.close();
+}
 async function markRespondedLocal(ts) {
   if (!ts) return;
   const db = await openDB();
@@ -291,9 +303,10 @@ $('#fullyRandomToggle').addEventListener('click', () => { config.fullyRandom = !
 async function clearLocalData() {
   const db = await openDB();
   await new Promise((res, rej) => {
-    const tx = db.transaction(['logs', 'received'], 'readwrite');
+    const tx = db.transaction(['logs', 'received', 'alarms'], 'readwrite');
     tx.objectStore('logs').clear();
     tx.objectStore('received').clear();
+    tx.objectStore('alarms').clear();
     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
   });
   db.close();
@@ -376,27 +389,26 @@ async function renderLogs() {
 }
 
 async function renderStats() {
-  const received = await getReceived();
-  const logs = await getLogs();
-  $('#statRecv').textContent = received.length;
-  $('#statResp').textContent = logs.length;
-  const rate = received.length ? Math.min(100, Math.round((received.filter((r) => r.respondedAt).length / received.length) * 100)) : 0;
-  $('#statRate').textContent = rate + '%';
+  const alarms = await getAlarms();
+  const total = alarms.length;
+  const acked = alarms.filter((a) => a.acked).length;
+  $('#statRecv').textContent = total;
+  $('#statResp').textContent = acked;
+  $('#statRate').textContent = (total ? Math.round((acked / total) * 100) : 0) + '%';
   const days = [];
-  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push({ key: dayKey(d.getTime()), label: DAYS[d.getDay()], recv: 0, resp: 0 }); }
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push({ key: dayKey(d.getTime()), label: DAYS[d.getDay()], ack: 0, miss: 0 }); }
   const byKey = Object.fromEntries(days.map((d) => [d.key, d]));
-  received.forEach((r) => { const k = dayKey(r.ts); if (byKey[k]) byKey[k].recv++; });
-  logs.forEach((l) => { const k = dayKey(l.ts); if (byKey[k]) byKey[k].resp++; });
-  const max = Math.max(1, ...days.map((d) => Math.max(d.recv, d.resp)));
+  alarms.forEach((a) => { const d = byKey[a.date]; if (d) { if (a.acked) d.ack++; else d.miss++; } });
+  const max = Math.max(1, ...days.map((d) => d.ack + d.miss));
   const H = 110;
   const bars = $('#weekBars');
   bars.innerHTML = '';
   days.forEach((d) => {
-    const respH = Math.round((Math.min(d.resp, d.recv) / max) * H);
-    const accH = Math.round((Math.max(0, d.recv - Math.min(d.resp, d.recv)) / max) * H);
+    const ackH = Math.round((d.ack / max) * H);
+    const missH = Math.round((d.miss / max) * H);
     const col = document.createElement('div');
     col.className = 'bar-col';
-    col.innerHTML = `<div class="bar-track"><div class="bar" style="height:${accH}px"></div><div class="bar resp" style="height:${respH}px"></div></div><div class="bar-lbl">${d.label}</div>`;
+    col.innerHTML = `<div class="bar-track"><div class="bar" style="height:${missH}px"></div><div class="bar resp" style="height:${ackH}px"></div></div><div class="bar-lbl">${d.label}</div>`;
     bars.appendChild(col);
   });
 }
@@ -419,7 +431,7 @@ $('#testBtn').addEventListener('click', async () => {
 });
 
 navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'open-log') { setPrompt(e.data.ts); postAck(e.data.date, e.data.time); showTab('log'); }
+  if (e.data && e.data.type === 'open-log') { setPrompt(e.data.ts); postAck(e.data.date, e.data.time); markAlarmAcked(e.data.date, e.data.time); showTab('log'); }
 });
 
 async function init() {
@@ -431,6 +443,7 @@ async function init() {
   if (params.get('log')) {
     setPrompt(params.get('ts'));
     postAck(params.get('date'), params.get('time'));
+    markAlarmAcked(params.get('date'), params.get('time'));
     showTab('log');
     history.replaceState(null, '', location.pathname);
   }

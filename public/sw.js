@@ -1,7 +1,7 @@
 /* sw.js — service worker: persistent push display, ack reporting, offline shell, stats logging */
 'use strict';
 
-const CACHE = 'aw-shell-v13';
+const CACHE = 'aw-shell-v14';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json', '/img/icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -37,21 +37,28 @@ self.addEventListener('fetch', (event) => {
 // ---- IndexedDB (received events for stats) ----
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('awareness', 1);
+    const req = indexedDB.open('awareness', 2);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('received')) db.createObjectStore('received', { keyPath: 'ts' });
       if (!db.objectStoreNames.contains('logs')) db.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
+      if (!db.objectStoreNames.contains('alarms')) db.createObjectStore('alarms', { keyPath: 'key' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
-async function addReceived(ts) {
+// Record one alarm per (date,time). Re-nudges of the same alarm do NOT create
+// a new record, so an alarm is counted once with an acked/missed outcome.
+async function recordAlarm(data) {
+  if (!data || data.kind === 'test' || !data.date || !data.time) return;
+  const key = data.date + '_' + data.time;
   const db = await openDB();
   await new Promise((res, rej) => {
-    const tx = db.transaction('received', 'readwrite');
-    tx.objectStore('received').put({ ts, respondedAt: null });
+    const tx = db.transaction('alarms', 'readwrite');
+    const st = tx.objectStore('alarms');
+    const g = st.get(key);
+    g.onsuccess = () => { if (!g.result) st.put({ key, date: data.date, time: data.time, ts: data.ts || Date.now(), acked: false }); };
     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
   });
   db.close();
@@ -89,7 +96,7 @@ self.addEventListener('push', (event) => {
     data: { ts, date: data.date || null, time: data.time || null, userId: data.userId || null, url },
   };
   event.waitUntil((async () => {
-    try { await addReceived(ts); } catch (_) {}
+    try { await recordAlarm(data); } catch (_) {}
     await self.registration.showNotification(title, options);
   })());
 });

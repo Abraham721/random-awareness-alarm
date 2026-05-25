@@ -90,10 +90,10 @@
       </div>
 
       <div class="card">
-        <h2>놓쳤을 때 재알림</h2>
-        <p class="hint" style="margin-top:0;">알림을 일정 시간 안에 열어보지 않으면 부드럽게 다시 알려줍니다. 바쁠 때 놓치지 않도록요.</p>
+        <h2>알아차림 반복</h2>
+        <p class="hint" style="margin-top:0;">알림을 탭해 확인하기 전까지 정해진 횟수만큼 다시 알립니다. 끝까지 확인하지 않으면 '미인지'로 기록돼요.</p>
         <div class="row">
-          <div class="label">재알림 횟수<small>0이면 끔</small></div>
+          <div class="label">반복 횟수<small>0이면 한 번만 알림</small></div>
           <div class="stepper">
             <button id="nudgeMinus" aria-label="줄이기">−</button>
             <span class="val" id="nudgeVal">1</span>
@@ -101,7 +101,7 @@
           </div>
         </div>
         <div class="row">
-          <div class="label">재알림 간격</div>
+          <div class="label">반복 간격</div>
           <select id="nudgeIntervalSel">
             <option value="5">5분</option>
             <option value="10" selected>10분</option>
@@ -154,16 +154,16 @@
         <h2>전체 요약</h2>
         <div class="stat-grid">
           <div class="stat"><div class="num" id="statRecv">0</div><div class="lbl">받은 알림</div></div>
-          <div class="stat"><div class="num" id="statResp">0</div><div class="lbl">기록한 횟수</div></div>
-          <div class="stat"><div class="num" id="statRate">0%</div><div class="lbl">응답률</div></div>
+          <div class="stat"><div class="num" id="statResp">0</div><div class="lbl">인지(알아차림)</div></div>
+          <div class="stat"><div class="num" id="statRate">0%</div><div class="lbl">인지율</div></div>
         </div>
       </div>
       <div class="card">
         <h2>최근 7일</h2>
         <div class="bars" id="weekBars"></div>
         <p class="hint center" style="margin-top:10px;">
-          <span style="color:var(--accent)">■</span> 받은 알림 &nbsp;
-          <span style="color:var(--good)">■</span> 기록함
+          <span style="color:var(--good)">■</span> 인지 &nbsp;
+          <span style="color:var(--accent)">■</span> 미인지
         </p>
       </div>
     </section>
